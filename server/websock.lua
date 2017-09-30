@@ -1,7 +1,6 @@
 local copas = require('copas')
 local websocket = require('websocket')
 
-
 local world = {}
 local data, msg_or_ip, port_or_nil
 local entity, cmd, arms
@@ -12,7 +11,6 @@ function run_websock(ws)
     while running do
         data = ws:receive()
         if data then
-            print(data)
             entity, cmd, parms = data:match('^(%S*) (%S*) (.*)')
             if cmd == 'move' then
                 local x, y = parms:match('^(%-?[%d.e]*) (%-?[%d.e]*)$')
@@ -27,9 +25,9 @@ function run_websock(ws)
                 world[entity] = {x=x, y=y}
             elseif cmd == 'update' then
                 for k, v in pairs(world) do
-                    dg = string.format('%s %s %d %d\r\n', k, 'at', v.x, v.y)
-                    print(dg)
-                    ws:send(dg, 2)
+                    dg = string.format('%s %s %d %d\n', k, 'at', v.x, v.y)
+                    -- the \n above is needed to terminate a message
+                    ws:send(dg, 2) -- Opcode 2 indicates binary, which is required for love.js
                 end
             elseif cmd == 'quit' then
                 running = false
@@ -47,9 +45,8 @@ end
 local server = websocket.server.copas.listen {
     port = 8089,
     protocols = {
-        binary = run_websock
-    },
-    default = run_websock
+        binary = run_websock -- the protocol name must be 'binary' for this to work
+    }
 }
 
 print "Beginning server loop."

@@ -1,6 +1,8 @@
 local socket = require 'socket'
 
-local address, port = '192.168.1.38', 8089
+local address, port = 'localhost', 8089
+-- If you need to access this from a remote machine you will need to chane
+-- the above
 
 local entity
 local updaterate = 0.1
@@ -12,27 +14,31 @@ local t
 function love.load()
     tcp = socket.tcp()
     tcp:connect(address, port)
+    -- Websockets require that we use TCP
+    -- If you want flexibility to fall back to UDP in a non-web environment
+    -- you will need to set this up yourself.
 
     t = 0
 end
 
-ready = 0
-
-function init()
-    math.randomseed(os.time())
-    entity = tostring(math.random(99999))
-
-    local dg = string.format('%s %s %d %d', entity, 'at', 320, 240)
-    tcp:send(dg)
-end
+ready = false
 
 function love.update(dt)
-    if ready == 0 then
-        ready = 1 -- For some reason the network won't work on the first frame
-    elseif ready == 1 then
-        init()
-        ready = 2
+    if not ready then
+        ready = true
+        -- For some reason the network won't work on the first frame
+        -- We skip over running gameplay in the first frame to deal with this
     else
+
+        if not entity then
+            -- Set up our entity
+            math.randomseed(os.time())
+            entity = tostring(math.random(99999))
+
+            local dg = string.format('%s %s %d %d', entity, 'at', 320, 240)
+            tcp:send(dg)
+        end
+
         t = t + dt
 
         if t > updaterate then
