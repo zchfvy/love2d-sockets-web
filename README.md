@@ -18,7 +18,7 @@ cd love2d-sockets-web
 
 Next start the server:
 ```
-lua ./server/websock.lua
+lua ./websock.lua
 ```
 
 And in a separate terminal start the client
